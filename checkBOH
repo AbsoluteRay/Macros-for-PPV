@@ -1,0 +1,99 @@
+Sub checkBOH()
+
+Dim x As Long
+Dim y As Long
+Dim z As String
+
+ActiveSheet.Range("R1").Value = "Qty this month"
+ActiveSheet.Range("S1").Value = "Check"
+ActiveSheet.Range("T1").Value = "Inv unit price this month"
+ActiveSheet.Range("U1").Value = "Check"
+
+ActiveSheet.Range("V1").Value = "Rec number this month"
+ActiveSheet.Range("W1").Value = "Check"
+
+x = ActiveSheet.Range("B" & Rows.Count).End(xlUp).Row 'x represents the number of last row
+
+For q = 2 To x
+
+y = ActiveSheet.Range("A" & q).Value 'y represents row number to be checked in detail sheet
+z = ActiveSheet.Range("Q" & q).Value 'z represents sheet name to be checked within deail sheet
+
+'judge whether line match
+If Worksheets(z).Range("G" & y).Value = ActiveSheet.Range("G" & q).Value And Worksheets(z).Range("E" & y).Value = ActiveSheet.Range("E" & q).Value Then
+
+ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & y).Value 'Qty this month BOH
+
+ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & y).Value 'Inv unit price this month BOH
+
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & y).Value 'Rec number this month BOH
+
+
+Else
+'if in if
+If Worksheets(z).Range("G" & y).Value + Worksheets(z).Range("G" & (y + 1)).Value = ActiveSheet.Range("G" & q).Value Then
+
+ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & y).Value + Worksheets(z).Range("G" & (y + 1)).Value 'Qty this month BOH
+
+ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & y).Value 'Inv unit price this month BOH
+
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & y).Value 'Rec number this month BOH
+
+With ActiveSheet.Range("R" & q).Font
+.Bold = True
+.Color = vbRed
+.Size = 16
+End With
+
+Else
+
+ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & (y + 1)).Value 'Qty this month BOH
+
+ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & (y + 1)).Value 'Inv unit price this month BOH
+
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & (y + 1)).Value 'Rec number this month BOH
+
+With ActiveSheet.Range("R" & q).Font
+.Bold = True
+.Color = vbBlue
+.Size = 16
+End With
+
+End If
+
+End If
+
+ActiveSheet.Range("S" & q).FormulaR1C1 = "=RC[-1]=RC[-12]"
+
+ActiveSheet.Range("U" & q).FormulaR1C1 = "=RC[-1]=RC[-9]"
+
+ActiveSheet.Range("W" & q).FormulaR1C1 = "=RC[-1]=RC[-18]"
+
+Next
+
+ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x).Select
+
+Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
+        Formula1:="=TRUE"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 5296274
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    
+ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x).Select
+Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
+        Formula1:="=FALSE"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 255
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+
+ActiveSheet.Columns("R:W").AutoFit
+
+End Sub
