@@ -1,43 +1,72 @@
-Sub checkBOH()
+Sub checkBOH1()
 
 Dim x As Long
 Dim y As Long
 Dim z As String
 
+'titles input
 ActiveSheet.Range("R1").Value = "Qty this month"
 ActiveSheet.Range("S1").Value = "Check"
 ActiveSheet.Range("T1").Value = "Inv unit price this month"
 ActiveSheet.Range("U1").Value = "Check"
 
-ActiveSheet.Range("V1").Value = "Rec number this month"
+ActiveSheet.Range("V1").Value = "Rec Date this month"
 ActiveSheet.Range("W1").Value = "Check"
+
+ActiveSheet.Range("X1").Value = "Vendor name this month"
+ActiveSheet.Range("Y1").Value = "Check"
+
+ActiveSheet.Range("Z1").Value = "PO Number this month"
+ActiveSheet.Range("AA1").Value = "Check"
+
+ActiveSheet.Range("AB1").Value = "Rec Number this month"
+ActiveSheet.Range("AC1").Value = "Check"
+
+ActiveSheet.Range("AD1").Value = "Invoice Number this month"
+ActiveSheet.Range("AE1").Value = "Check"
+
 
 x = ActiveSheet.Range("B" & Rows.Count).End(xlUp).Row 'x represents the number of last row
 
 For q = 2 To x
 
 y = ActiveSheet.Range("A" & q).Value 'y represents row number to be checked in detail sheet
-z = ActiveSheet.Range("Q" & q).Value 'z represents sheet name to be checked within deail sheet
+z = ActiveSheet.Range("Q" & q).Value 'z represents name of sheet  to be checked
 
-'judge whether line match
+'judge whether line match, condition 1
 If Worksheets(z).Range("G" & y).Value = ActiveSheet.Range("G" & q).Value And Worksheets(z).Range("E" & y).Value = ActiveSheet.Range("E" & q).Value Then
 
 ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & y).Value 'Qty this month BOH
 
 ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & y).Value 'Inv unit price this month BOH
 
-ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & y).Value 'Rec number this month BOH
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("B" & y).Value 'Rec date this month BOH
 
+ActiveSheet.Range("X" & q) = Worksheets(z).Range("C" & y).Value 'Vendor name this month BOH
+
+ActiveSheet.Range("Z" & q) = Worksheets(z).Range("D" & y).Value 'PO Number this month BOH
+
+ActiveSheet.Range("AB" & q) = Worksheets(z).Range("E" & y).Value 'Rec date this month BOH
+
+ActiveSheet.Range("AD" & q) = Worksheets(z).Range("F" & y).Value 'Invoice number this month BOH
 
 Else
-'if in if
+'if in if, condition 2
 If Worksheets(z).Range("G" & y).Value + Worksheets(z).Range("G" & (y + 1)).Value = ActiveSheet.Range("G" & q).Value Then
 
 ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & y).Value + Worksheets(z).Range("G" & (y + 1)).Value 'Qty this month BOH
 
 ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & y).Value 'Inv unit price this month BOH
 
-ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & y).Value 'Rec number this month BOH
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("B" & y).Value 'Rec date this month BOH
+
+ActiveSheet.Range("X" & q) = Worksheets(z).Range("C" & y).Value 'Vendor name this month BOH
+
+ActiveSheet.Range("Z" & q) = Worksheets(z).Range("D" & y).Value 'PO Number this month BOH
+
+ActiveSheet.Range("AB" & q) = Worksheets(z).Range("E" & y).Value 'Rec number this month BOH
+
+ActiveSheet.Range("AD" & q) = Worksheets(z).Range("F" & y).Value 'Invoice number this month BOH
 
 With ActiveSheet.Range("R" & q).Font
 .Bold = True
@@ -45,13 +74,21 @@ With ActiveSheet.Range("R" & q).Font
 .Size = 16
 End With
 
-Else
+Else ' condition 3
 
 ActiveSheet.Range("R" & q) = Worksheets(z).Range("G" & (y + 1)).Value 'Qty this month BOH
 
 ActiveSheet.Range("T" & q) = Worksheets(z).Range("L" & (y + 1)).Value 'Inv unit price this month BOH
 
-ActiveSheet.Range("V" & q) = Worksheets(z).Range("E" & (y + 1)).Value 'Rec number this month BOH
+ActiveSheet.Range("V" & q) = Worksheets(z).Range("B" & y + 1).Value 'Rec date this month BOH
+
+ActiveSheet.Range("X" & q) = Worksheets(z).Range("C" & y + 1).Value 'Vendor name this month BOH
+
+ActiveSheet.Range("Z" & q) = Worksheets(z).Range("D" & y + 1).Value 'PO Number this month BOH
+
+ActiveSheet.Range("AB" & q) = Worksheets(z).Range("E" & y + 1).Value 'Rec number this month BOH
+
+ActiveSheet.Range("AD" & q) = Worksheets(z).Range("F" & y + 1).Value 'Invoice number this month BOH
 
 With ActiveSheet.Range("R" & q).Font
 .Bold = True
@@ -63,16 +100,25 @@ End If
 
 End If
 
-ActiveSheet.Range("S" & q).FormulaR1C1 = "=RC[-1]=RC[-12]"
+'enter formula to determine TRUE or FALSE
+ActiveSheet.Range("S" & q).Formula = "=G" & q & "=R" & q
 
-ActiveSheet.Range("U" & q).FormulaR1C1 = "=RC[-1]=RC[-9]"
+ActiveSheet.Range("U" & q).Formula = "=L" & q & "=T" & q
 
-ActiveSheet.Range("W" & q).FormulaR1C1 = "=RC[-1]=RC[-18]"
+ActiveSheet.Range("W" & q).Formula = "=B" & q & "=V" & q
 
-Next
+ActiveSheet.Range("Y" & q).Formula = "=C" & q & "=X" & q
 
-ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x).Select
+ActiveSheet.Range("AA" & q).Formula = "=D" & q & "=Z" & q
 
+ActiveSheet.Range("AC" & q).Formula = "=E" & q & "=AB" & q
+
+ActiveSheet.Range("AE" & q).Formula = "=F" & q & "=AD" & q
+
+Next 'go to the next line and repeat above
+
+'conditioning format for TRUE(Green) & FALSE(Red)
+ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x & ",Y2:Y" & x & ",AA2:AA" & x & ",AC2:AC" & x & ",AE2:AE" & x).Select
 Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
         Formula1:="=TRUE"
     Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
@@ -83,7 +129,7 @@ Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
     End With
     Selection.FormatConditions(1).StopIfTrue = False
     
-ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x).Select
+ActiveSheet.Range("S2:S" & x & ",U2:U" & x & ",W2:W" & x & ",Y2:Y" & x & ",AA2:AA" & x & ",AC2:AC" & x & ",AE2:AE" & x).Select
 Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
         Formula1:="=FALSE"
     Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
@@ -94,6 +140,19 @@ Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlEqual, _
     End With
     Selection.FormatConditions(1).StopIfTrue = False
 
-ActiveSheet.Columns("R:W").AutoFit
+'set font and column width
+ActiveSheet.Range("A1").CurrentRegion.Font.Name = "arial"
+ActiveSheet.Range("R1:AE1").Font.Bold = True
+ActiveSheet.Range("R1:AE1").Interior.ColorIndex = 6
+ActiveSheet.Columns("R:AE").AutoFit
+
+'Count section
+ActiveSheet.Range("AG1").Value = "T/F"
+ActiveSheet.Range("AH1").Value = "Count"
+ActiveSheet.Range("AG2").Value = "TRUE"
+ActiveSheet.Range("AG3").Value = "FALSE"
+
+ActiveSheet.Range("AH2").Formula = "=COUNTIF(S1:AE" & x & ",AG2)" 'count TRUE
+ActiveSheet.Range("AH3").Formula = "=COUNTIF(S1:AE" & x & ",AG3)" 'count FALSE
 
 End Sub
