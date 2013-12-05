@@ -1,0 +1,149 @@
+Sub CopyRangeFromMultiWorksheets()
+    Dim sh As Worksheet
+    Dim DestSh As Worksheet
+    Dim Last As Long
+    Dim CopyRng As Range
+    
+    Dim endrow As Long
+    Dim startrow As Long
+    Dim midrow As Long
+    Dim j As Long
+        
+    With Application
+        .ScreenUpdating = False
+        .EnableEvents = False
+    End With
+    
+ 'standardize setup of active sheet
+For j = ActiveSheet.Index To Sheets.Count
+    Sheets(j).Select
+    
+    Cells.Select
+    ActiveWindow.FreezePanes = False
+    ActiveWindow.Zoom = 100
+    ActiveSheet.AutoFilterMode = False
+    Selection.EntireRow.Hidden = False
+    Cells(1, 1).Select
+Next
+
+'if sheet "MergeAllSheets" exists, delete it.
+    Application.DisplayAlerts = False
+    On Error Resume Next
+    ActiveWorkbook.Worksheets("MergeAllSheets").Delete
+    On Error GoTo 0
+    Application.DisplayAlerts = True
+ 
+ 'add sheet "MergeAllSheets"
+    Sheets(1).Select
+    Set DestSh = ActiveWorkbook.Worksheets.Add
+    DestSh.Name = "MergeAllSheets"
+
+'input headers
+Worksheets("MergeAllSheets").Range("A1").Value = "L/I"
+Worksheets("MergeAllSheets").Range("B1").Value = "Rec_Date"
+Worksheets("MergeAllSheets").Range("C1").Value = "V_Name"
+Worksheets("MergeAllSheets").Range("D1").Value = "PO_Number"
+Worksheets("MergeAllSheets").Range("E1").Value = "Rec_ Number"
+Worksheets("MergeAllSheets").Range("F1").Value = "I_Number"
+Worksheets("MergeAllSheets").Range("G1").Value = "Qty_Rec"
+Worksheets("MergeAllSheets").Range("H1").Value = "Mon_Cum_Rec_Qty"
+Worksheets("MergeAllSheets").Range("I1").Value = "Mon_Ship_Qty"
+Worksheets("MergeAllSheets").Range("J1").Value = "Ship_Desc"
+Worksheets("MergeAllSheets").Range("K1").Value = "Ship_Month"
+Worksheets("MergeAllSheets").Range("L1").Value = "Inv_Unit_ Price"
+Worksheets("MergeAllSheets").Range("M1").Value = "Ext_Ship_Price"
+Worksheets("MergeAllSheets").Range("N1").Value = "Mon_Ship_$"
+Worksheets("MergeAllSheets").Range("O1").Value = "Avg_Unit_Price"
+Worksheets("MergeAllSheets").Range("P1").Value = "Audit"
+Worksheets("MergeAllSheets").Range("Q1").Value = "Tab"
+   
+ 'go through each sheet and copy data to DestSh
+For Each sh In ActiveWorkbook.Worksheets
+        If sh.Name <> DestSh.Name And sh.Visible = True Then
+ 
+ 'find the last row with data in DestSh
+            Last = LastRow(DestSh)
+              
+'find the last row to be copied
+endrow = sh.Range("B" & Rows.Count).End(xlUp).Row
+            
+'find the first row to be copied
+startrow = sh.Range("J" & Rows.Count).End(xlUp).End(xlUp).Row
+
+'midrow for later use
+midrow = sh.Range("J" & Rows.Count).End(xlUp).Row
+
+ 'set to be copied area
+            Set CopyRng = sh.Range("B" & (startrow + 1) & ":P" & endrow)
+            
+ 'test whether there is enough rows to be copied to
+            If Last + CopyRng.Rows.Count > DestSh.Rows.Count Then
+                MsgBox "Not enough rows"
+                GoTo ExitTheSub
+            End If
+ 
+ 'copy data value and format from each sheet
+            CopyRng.Copy
+            With DestSh.Cells(Last + 1, "B")
+                .PasteSpecial xlPasteValues
+                .PasteSpecial xlPasteFormats
+                Application.CutCopyMode = False
+            End With
+            
+ 'fill month description and EOH(End on hand)
+ If midrow - startrow > 1 Then
+  Range("J" & (Last + 1)).Select
+            ActiveCell.Resize(midrow - startrow).Select
+        Selection.FillUp
+End If
+
+Range("J" & (Last + 1 + midrow - startrow)).Select
+           ActiveCell.Range("A1:A" & (endrow - midrow)).Select
+   Selection.SpecialCells(xlCellTypeBlanks).Select
+   Selection.FormulaR1C1 = "End on Hand"
+ 
+ 'copy sheet name to column Q
+            DestSh.Cells(Last + 1, "Q").Resize(CopyRng.Rows.Count).Value = sh.Name
+'copy row number
+DestSh.Cells(Last + 1, "A") = startrow + 1
+DestSh.Range("A" & (Last + 1)).AutoFill Destination:=DestSh.Range("A" & (Last + 1) & ":A" & (Last + endrow - startrow)), Type:=xlFillSeries
+        End If
+Next
+ 
+ExitTheSub:
+ 
+    Application.GoTo DestSh.Cells(1)
+ 
+ 'autofit column width
+    DestSh.Columns.AutoFit
+ 
+ Dim pivotrange As Range
+ Worksheets("MergeAllSheets").Select
+'set the range to make pivot table
+Set pivotrange = Range("A1:Q" & Range("B1048576").End(xlUp).Row)
+'make pivot table
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        pivotrange, Version:=xlPivotTableVersion14). _
+        CreatePivotTable TableDestination:="MergeAllSheets!R1C21", TableName:= _
+        "PivotTable4", DefaultVersion:=xlPivotTableVersion14
+    Sheets("MergeAllSheets").Select
+    Cells(1, 21).Select
+    ActiveSheet.PivotTables("PivotTable4").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable4").PivotFields("Qty_Rec"), "Sum of Qty_Rec", xlSum
+    ActiveSheet.PivotTables("PivotTable4").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable4").PivotFields("Ext_Ship_Price"), "Sum of Ext_Ship_Price", xlSum
+    With ActiveSheet.PivotTables("PivotTable4").PivotFields("Tab")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    With ActiveSheet.PivotTables("PivotTable4").PivotFields("Ship_Desc")
+        .Orientation = xlColumnField
+        .Position = 1
+    End With
+ 
+    With Application
+        .ScreenUpdating = True
+        .EnableEvents = True
+    End With
+
+End Sub
